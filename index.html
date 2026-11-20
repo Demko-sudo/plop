@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Plop! Sayı Bulmacası</title>
+<link rel="manifest" href="manifest.json"><meta name="theme-color" content="#2fbf6c"><link rel="apple-touch-icon" href="apple-touch-icon.png"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Plop!"><link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Figtree:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+/* Düzen: sol hizalı hero + canlı slime demosu, altında özellik ızgarası, tema şeridi, oyna/kurulum bölümü */
+:root{
+  --bg:#f1f8ee;--card:#ffffff;--ink:#17332a;--mute:#56705f;--line:#d6e6d3;
+  --accent:#2fbf6c;--accent-ink:#06361d;--sun:#ffd24a;
+  --fd:'Baloo 2','Trebuchet MS',system-ui,sans-serif;--fb:'Figtree',system-ui,sans-serif;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0f1f19;--card:#17302a;--ink:#e8f6ec;--mute:#9bb8a5;--line:#244338;--accent:#46d686;--accent-ink:#03281a;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0f1f19;--card:#17302a;--ink:#e8f6ec;--mute:#9bb8a5;--line:#244338;--accent:#46d686;--accent-ink:#03281a;color-scheme:dark}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font-family:var(--fb);font-size:17px;line-height:1.55}
+.wrap{max-width:1020px;margin:0 auto;padding:0 20px}
+h1,h2,h3{font-family:var(--fd);line-height:1.05;margin:0;text-wrap:balance}
+nav{display:flex;justify-content:space-between;align-items:center;padding:18px 0}
+.logo{font-family:var(--fd);font-weight:800;font-size:28px;letter-spacing:-.5px}
+.logo b{color:var(--accent)}
+nav a{color:var(--ink);text-decoration:none;font-weight:700;margin-left:18px}
+nav a:hover{color:var(--accent)}
+.hero{display:grid;grid-template-columns:1.1fr .9fr;gap:36px;align-items:center;padding:28px 0 56px}
+.hero h1{font-size:clamp(44px,8vw,84px);font-weight:800;letter-spacing:-1.5px}
+.hero h1 em{font-style:normal;color:var(--accent)}
+.hero p{color:var(--mute);max-width:46ch;font-size:19px;margin:18px 0 26px}
+.cta{display:flex;gap:12px;flex-wrap:wrap}
+.btn{display:inline-block;font-family:var(--fd);font-weight:800;font-size:20px;padding:12px 26px;border-radius:999px;text-decoration:none;border:3px solid var(--ink);color:var(--ink);background:var(--card);box-shadow:0 5px 0 var(--ink);transition:transform .1s,box-shadow .1s}
+.btn.main{background:var(--accent);color:var(--accent-ink)}
+.btn:hover{transform:translateY(2px);box-shadow:0 3px 0 var(--ink)}
+.btn:focus-visible,a:focus-visible,button:focus-visible{outline:3px solid var(--sun);outline-offset:3px}
+/* demo */
+.demo{background:var(--card);border:3px solid var(--ink);border-radius:28px;padding:22px;box-shadow:0 8px 0 var(--ink)}
+.demo .goal{display:flex;justify-content:space-between;font-family:var(--fd);font-weight:700;color:var(--mute)}
+.demo .goal b{color:var(--ink);font-size:22px}
+.stage{display:flex;justify-content:center;align-items:flex-end;gap:14px;min-height:150px;padding:18px 0 8px;flex-wrap:wrap}
+.slime{width:92px;height:78px;border-radius:50% 50% 42% 42%/58% 58% 42% 42%;display:grid;place-items:center;font-family:var(--fd);font-weight:800;font-size:34px;color:#fff;border:3px solid var(--ink);cursor:pointer;position:relative;background:hsl(var(--h) 68% 52%);transition:transform .15s;animation:bob 2.4s ease-in-out infinite;text-shadow:0 2px 0 rgba(0,0,0,.25)}
+.slime::before,.slime::after{content:"";position:absolute;top:16px;width:9px;height:11px;border-radius:50%;background:#fff;border:2px solid var(--ink)}
+.slime::before{left:22px}.slime::after{right:22px}
+.slime span{margin-top:26px}
+.slime.sel{transform:scale(1.08);box-shadow:0 0 0 4px var(--sun)}
+.slime.pop{animation:pop .35s}
+@keyframes bob{50%{transform:translateY(-5px) scaleY(1.04)}}
+@keyframes pop{from{transform:scale(.4)}to{transform:scale(1)}}
+.acts{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:10px}
+.acts button{font-family:var(--fd);font-weight:800;font-size:18px;border:3px solid var(--ink);background:var(--bg);color:var(--ink);border-radius:14px;padding:6px 14px;cursor:pointer}
+.acts button:hover{background:var(--sun);color:#17332a}
+.hint{text-align:center;color:var(--mute);font-size:14px;margin:12px 0 0;min-height:22px}
+/* sections */
+section{padding:48px 0;border-top:2px dashed var(--line)}
+section>h2{font-size:clamp(32px,5vw,48px);margin-bottom:8px}
+.lead{color:var(--mute);max-width:56ch;margin:0 0 28px}
+.how{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;counter-reset:s}
+.how div{background:var(--card);border:2px solid var(--line);border-radius:20px;padding:20px}
+.how div::before{counter-increment:s;content:counter(s);font-family:var(--fd);font-weight:800;font-size:40px;color:var(--accent);display:block;line-height:1}
+.how h3{font-size:24px;margin:8px 0 6px}
+.how p{margin:0;color:var(--mute)}
+.feat{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:16px}
+.feat article{background:var(--card);border:2px solid var(--line);border-radius:20px;padding:20px}
+.feat h3{font-size:22px;margin-bottom:6px}
+.feat p{margin:0;color:var(--mute);font-size:16px}
+.themes{display:flex;gap:12px;overflow-x:auto;padding:4px 2px 14px}
+.th{flex:0 0 150px;border-radius:20px;border:3px solid var(--ink);padding:14px;font-family:var(--fd);font-weight:800;font-size:20px;min-height:110px;display:flex;flex-direction:column;justify-content:space-between}
+.th small{font-family:var(--fb);font-weight:500;font-size:13px;opacity:.85}
+.play{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.box{background:var(--card);border:3px solid var(--ink);border-radius:24px;padding:24px;box-shadow:0 6px 0 var(--ink)}
+.box h3{font-size:28px;margin-bottom:10px}
+.box ol{margin:0 0 18px;padding-left:20px;color:var(--mute)}
+.box li{margin:6px 0}
+.box p{color:var(--mute);margin:0 0 16px}
+.note{font-size:14px;color:var(--mute);margin-top:14px}
+footer{padding:30px 0 50px;color:var(--mute);font-size:14px;border-top:2px dashed var(--line)}
+@media(max-width:820px){.hero,.play,.how{grid-template-columns:1fr}.hero{padding-top:8px}nav a.h{display:none}}
+@media(prefers-reduced-motion:reduce){.slime{animation:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<nav><div class="logo">Plop<b>!</b></div><div><a class="h" href="#nasil">Nasıl oynanır</a><a class="h" href="#ozellikler">Özellikler</a><a href="#oyna">Oyna</a></div></nav>
+
+<header class="hero">
+  <div>
+    <h1>Böl, <em>birleştir</em>, hedefe ulaş.</h1>
+    <p>Plop!, sayı taşıyan sevimli slime'larla oynanan bir sayı bulmacası. Sayıyı ikiye böl, toplama, çıkarma ve çarpma kartlarıyla birleştir, ekrandaki hedef sayıyı yakala.</p>
+    <div class="cta"><a class="btn main" href="#oyna">Uygulamayı yükle</a><a class="btn" href="#nasil">Nasıl oynanır?</a></div>
+  </div>
+  <div class="demo" aria-label="Canlı demo">
+    <div class="goal"><span>Hedef</span><b id="goal">3</b></div>
+    <div class="stage" id="stage"></div>
+    <div class="acts"><button id="b-split" type="button">÷2 Böl</button><button id="b-add" type="button">+ Topla</button><button id="b-reset" type="button">↺ Baştan</button></div>
+    <p class="hint" id="hint">Bir slime'a dokun, sonra “Böl” de.</p>
+  </div>
+</header>
+
+<section id="nasil">
+  <h2>Üç hamlede oyun</h2>
+  <p class="lead">Kurallar kısa, bulmacalar giderek zorlaşıyor. Bölümleri geçtikçe yeni kartlar tanışıyor.</p>
+  <div class="how">
+    <div><h3>Bir slime seç</h3><p>Sayısı çift olan slime ikiye bölünür: 12, iki tane 6 olur.</p></div>
+    <div><h3>Kartla birleştir</h3><p>İki slime'ı toplama, çıkarma ya da çarpma ile tek bir sayıya dönüştür.</p></div>
+    <div><h3>Hedefi yakala</h3><p>Ekrandaki bir slime hedef sayıya eşit olunca bölüm biter. Daha az hamle, daha çok yıldız.</p></div>
+  </div>
+</section>
+
+<section id="ozellikler">
+  <h2>Oyunun içinde neler var</h2>
+  <p class="lead">Tek dosyalık bir oyun: kurulum yok, internet olmasa da çalışır.</p>
+  <div class="feat">
+    <article><h3>Dünyalar ve bölümler</h3><p>Aşama aşama zorlaşan bölümler, kesirler dünyası ve her 11. bölümde gelen “Ters çevir” kartı (61. bölümden sonra).</p></article>
+    <article><h3>Gummy rehberin</h3><p>Slime mascot'un ipuçları verir, takıldığında yol gösterir. Kostüm ve görünümünü sen seçersin.</p></article>
+    <article><h3>Kostümler</h3><p>Kedi, robot, uzaylı, ninja, hayalet ve ejderha. Bazıları yıldızla alınır, bazıları başarım rozetiyle açılır.</p></article>
+    <article><h3>Arkadaşlar</h3><p>Profilindeki koduyla ya da QR ile arkadaş ekle, istekleri kabul et, benzer seviyedeki oyuncuları keşfet.</p></article>
+    <article><h3>Hesap ve bulut kaydı</h3><p>İlerlemeni hesabına kaydet, başka cihazda devam et. İnternet yokken de oynamaya devam edersin.</p></article>
+    <article><h3>Herkese uygun</h3><p>Çocuk modu, rahat mod, sesli yönlendirme ve yazı boyutu ayarı.</p></article>
+  </div>
+</section>
+
+<section>
+  <h2>Sekiz görünüm</h2>
+  <p class="lead">Aynı bulmaca, farklı dünyalar. Retro modda her şey piksel, vintage modda eski çizgi filmlerdeki gibi kıvrak.</p>
+  <div class="themes" role="list">
+    <div class="th" role="listitem" style="background:#d9f3c9;color:#17332a">Çayır<small>Varsayılan, ferah yeşil</small></div>
+    <div class="th" role="listitem" style="background:#16233a;color:#dbe8ff">Gece<small>Koyu, göz yormaz</small></div>
+    <div class="th" role="listitem" style="background:#f6d56a;color:#3a2a00">Altın<small>Başarımla açılır</small></div>
+    <div class="th" role="listitem" style="background:#bfe9ff;color:#0b3550">Kristal<small>100. bölümde açılır</small></div>
+    <div class="th" role="listitem" style="background:#2b2b55;color:#ffeb7a;font-family:monospace">Retro<small style="font-family:var(--fb)">Piksel sanatı</small></div>
+    <div class="th" role="listitem" style="background:#fff;color:#111">Basit<small>Açık, koyu, renkli</small></div>
+    <div class="th" role="listitem" style="background:#e9dcc0;color:#2a1c10">Vintage<small>Eski çizgi film tarzı</small></div>
+  </div>
+</section>
+
+<section id="oyna">
+  <h2>Oyna ve kur</h2>
+  <p class="lead">İki yol var. Hızlısı tarayıcıda oynamak, kalıcısı oyunu telefonuna ya da kendi sitene koymak.</p>
+  <div class="play">
+    <div class="box">
+      <h3>Uygulamayı yükle</h3>
+      <p>Tek dokunuşla telefonuna ya da bilgisayarına kur. İlerleme cihazında saklanır.</p>
+      <button class="btn" id="install" type="button">Uygulamayı yükle</button>
+      <p class="note">Yüklediğin uygulama ana ekranında kendi simgesiyle açılır ve internet olmadan da çalışır.</p>
+    </div>
+    <div class="box">
+      <h3>Telefona kur</h3>
+      <ol>
+        <li>Oyunu telefonunun tarayıcısında aç.</li>
+        <li>Paylaş ya da menü düğmesine dokun.</li>
+        <li>“Ana ekrana ekle” de.</li>
+      </ol>
+      <button class="btn" id="install2" type="button">Uygulamayı yükle</button><p class="note" id="inst-note">Android Chrome'da düğme uygulamayı doğrudan yükler. iPhone'da Safari'de Paylaş → Ana Ekrana Ekle.</p>
+    </div>
+  </div>
+</section>
+
+<footer>Plop! Sayı Bulmacası. Slime'lar, sayılar ve biraz da şans.</footer>
+</div>
+
+<script>
+(function(){
+  var st=document.getElementById('stage'),hint=document.getElementById('hint'),goal=document.getElementById('goal');
+  var GOAL=3,sl=[],sel=-1;
+  function hue(n){return (n*37)%360}
+  function reset(){sl=[12];sel=-1;GOAL=3;goal.textContent=GOAL;hint.textContent='Bir slime\'a dokun, sonra “Böl” de.';draw()}
+  function draw(newIdx){
+    st.innerHTML='';
+    sl.forEach(function(n,i){
+      var b=document.createElement('button');b.type='button';
+      b.className='slime'+(i===sel?' sel':'')+(newIdx&&newIdx.indexOf(i)>-1?' pop':'');
+      b.style.setProperty('--h',hue(n));b.style.padding='0';b.setAttribute('aria-label','Slime '+n);
+      b.innerHTML='<span>'+n+'</span>';
+      b.onclick=function(){sel=(sel===i)?-1:i;draw();msg()};
+      st.appendChild(b);
+    });
+    if(sl.indexOf(GOAL)>-1){hint.textContent='🎉 Hedefe ulaştın! Baştan dene ya da başka yol bul.';}
+  }
+  function msg(){if(sl.indexOf(GOAL)>-1)return;hint.textContent=sel<0?'Bir slime\'a dokun.':'Seçili: '+sl[sel]+'. “Böl” ya da başka bir slime seçip “Topla”.';}
+  var pick2=-1;
+  document.getElementById('b-split').onclick=function(){
+    if(sel<0){hint.textContent='Önce bir slime seç.';return}
+    var n=sl[sel];if(n%2){hint.textContent=n+' tek sayı, bölünmez.';return}
+    sl.splice(sel,1,n/2,n/2);var i=sel;sel=-1;draw([i,i+1]);
+  };
+  document.getElementById('b-add').onclick=function(){
+    if(sl.length<2){hint.textContent='Toplamak için en az iki slime gerekir.';return}
+    if(sel<0){hint.textContent='Önce bir slime seç, ikincisi yanındaki olur.';return}
+    var j=sel+1<sl.length?sel+1:sel-1,a=Math.min(sel,j),n=sl[sel]+sl[j];
+    sl.splice(a,2,n);sel=-1;draw([a]);
+  };
+  document.getElementById('b-reset').onclick=reset;
+  reset();
+})();
+</script>
+<script>if('serviceWorker' in navigator&&location.protocol.indexOf('http')===0)addEventListener('load',function(){navigator.serviceWorker.register('sw.js').catch(function(){});});</script><script>
+(function(){var dp=null;
+addEventListener('beforeinstallprompt',function(e){e.preventDefault();dp=e;});
+function go(){var n=document.getElementById('inst-note');
+ if(dp){dp.prompt();dp.userChoice.then(function(){dp=null;});return;}
+ var ua=navigator.userAgent,m;
+ if(/iPhone|iPad|iPod/.test(ua))m='iPhone/iPad: Safari ile aç, Paylaş düğmesine bas, “Ana Ekrana Ekle”yi seç.';
+ else if(/OPR|Opera/.test(ua)&&!/Android/.test(ua))m='Opera masaüstü uygulama yüklemeyi desteklemiyor. Chrome ya da Edge ile aç; adres çubuğundaki yükle simgesine bas. Telefondaysan Chrome ile aç.';
+ else if(/Android/.test(ua))m='Chrome menüsünü (⋮) aç, “Uygulamayı yükle” ya da “Ana ekrana ekle”yi seç.';
+ else m='Chrome ya da Edge ile aç; adres çubuğunun sağındaki yükle simgesine bas ya da menüden “Plop!’u yükle”yi seç.';
+ n.textContent=m;n.style.cssText='color:var(--ink);font-weight:700;font-size:16px;background:var(--sun);padding:10px 14px;border-radius:14px';
+ try{n.scrollIntoView({block:'center',behavior:'smooth'});}catch(e){}}
+['install','install2'].forEach(function(i){var b=document.getElementById(i);if(b)b.onclick=go;});
+addEventListener('appinstalled',function(){var n=document.getElementById('inst-note');if(n)n.textContent='Uygulama yüklendi. Ana ekranında Plop! simgesini bul.';});
+})();
+</script></body>
+</html>
