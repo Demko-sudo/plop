@@ -817,6 +817,18 @@ body.offline #n-online,body.offline #m-online{opacity:.45}
 [data-theme=retro] .ei{shape-rendering:crispEdges}
 [data-theme=retro] .ei path,[data-theme=retro] .ei circle,[data-theme=retro] .ei rect{stroke-width:2.6}
 [data-theme=vintage] .ei.ec{filter:sepia(.35)}
+
+/* ---- hesap formu ---- */
+.acc-form{display:flex;flex-direction:column;gap:8px;margin-top:10px}
+.acc-in{width:100%;box-sizing:border-box;padding:12px 14px;font-size:16px;font-weight:600;border:2px solid var(--line);border-radius:14px;background:var(--inp);color:var(--ink);font-family:inherit;user-select:text;-webkit-user-select:text}
+.acc-in:focus{outline:none;border-color:var(--green)}
+.acc-btns{display:flex;gap:8px;margin-top:6px}.acc-btns .btn{flex:1;font-size:16px;padding:11px 8px}
+.acc-link{align-self:flex-start;background:none;border:0;color:var(--green-d);font-weight:700;font-size:14px;padding:4px 0;text-decoration:underline;cursor:pointer}
+.acc-or{display:flex;align-items:center;gap:10px;color:var(--muted);font-size:13px;font-weight:700;margin:4px 0}
+.acc-or::before,.acc-or::after{content:"";flex:1;height:2px;background:var(--line)}
+.acc-g{gap:10px;font-size:16px}
+.acc-st{margin:6px 0 0;font-size:13px}
+.minimal .acc-in{border-color:var(--ink)}.minimal .acc-link{color:var(--ink)}
 </style>
 </head>
 <body data-theme="cayir">
@@ -1123,12 +1135,11 @@ body.offline #n-online,body.offline #m-online{opacity:.45}
 <script>
 (function(){
 "use strict";
-const PLOP_FB_DEFAULT={apiKey:'',projectId:''};
+const PLOP_FB_DEFAULT={apiKey:'AIzaSyBSC-UX00GzEYLdDva64lKqD-51W4T8Xv0',projectId:'plop-oyun',authDomain:'plop-oyun.firebaseapp.com',appId:'1:301366367048:web:512ea75220ec108764997d'};
 const IN_CLAUDE=!!(window.claude&&typeof window.claude.use==='function');
 const FBX=(function(){
   if(IN_CLAUDE)return null;
-  let cfg=null;try{cfg=JSON.parse(localStorage.getItem('plop-fb')||'null');}catch(e){}
-  if(!cfg||!cfg.apiKey||!cfg.projectId)cfg=PLOP_FB_DEFAULT;
+  let cfg=PLOP_FB_DEFAULT;
   if(!cfg||!cfg.apiKey||!cfg.projectId)return null;
   const K=cfg.apiKey,PID=cfg.projectId,IT='https://identitytoolkit.googleapis.com/v1/',AK='plop-fbauth';
   let A=null;try{A=JSON.parse(localStorage.getItem(AK)||'null');}catch(e){}
@@ -1210,7 +1221,25 @@ const FBX=(function(){
   };
   window.claude={use:async n=>n==='db'?DBX:n==='user'?USERX:null};
   return{
-    info:()=>({email:(A&&A.email)||'',anon:!(A&&A.email)}),
+    info:()=>({email:(A&&A.email)||'',anon:!(A&&A.email),uid:A&&A.uid}),
+    cfg:cfg,
+    async google(){
+      const load=u=>new Promise((ok,no)=>{if(document.querySelector('script[src="'+u+'"]'))return ok();const sc=document.createElement('script');sc.src=u;sc.onload=ok;sc.onerror=()=>no(new Error('SDK_LOAD'));document.head.appendChild(sc);});
+      const V='https://www.gstatic.com/firebasejs/10.12.2/';
+      await load(V+'firebase-app-compat.js');await load(V+'firebase-auth-compat.js');
+      const fb=window.firebase;const app=fb.apps.length?fb.app():fb.initializeApp({apiKey:K,authDomain:cfg.authDomain,projectId:PID,appId:cfg.appId});
+      const pv=new fb.auth.GoogleAuthProvider();pv.setCustomParameters({prompt:'select_account'});
+      const res=await app.auth().signInWithPopup(pv);const u=res.user;
+      const tk=await u.getIdToken();
+      A={idToken:tk,refreshToken:u.refreshToken,exp:Date.now()+3300000,uid:u.uid,email:u.email||''};saveA();
+      try{await app.auth().signOut();}catch(e){}
+      return A.uid;
+    },
+    async loadCloud(){
+      await ensureAuth();
+      const j=await fs('GET','/data/users/'+A.uid+'/save');
+      return j?decF(j.fields):null;
+    },
     async attachEmail(email,pw){
       await ensureAuth();
       const j=await post(IT+'accounts:update?key='+K,{idToken:A.idToken,email:email,password:pw,returnSecureToken:true});
@@ -3819,7 +3848,7 @@ function shopBuy(it){
     {'sh-wear':()=>{if(it.kind==='n')store.hat=it.id;else if(it.kind==='s')store.stCos=it.id;else if(it.kind==='g')store.glCos=it.id;else{store.gmHat=it.id;gmRefresh();}save();toast('Giydin! 🎉');renderShop();},'sh-ok':()=>{}});
 }
 $('#n-shop').onclick=()=>show('shop');$('#m-shop').onclick=()=>show('shop');
-const APP_VER='54';
+const APP_VER='55';
 function ldBar(p,txt){const b=$('#ld-bar');if(b){b.classList.remove('ind');b.style.width=p+'%';}if(txt)$('#ld-t').textContent=txt;}
 function bootLoad(done){
   const upd=store.ver&&store.ver!==APP_VER;
@@ -3845,14 +3874,18 @@ function netUpdate(first){
 }
 window.addEventListener('online',()=>netUpdate(false));
 window.addEventListener('offline',()=>netUpdate(false));
-const ACCT={name:'',email:'',loaded:false,last:0,busy:false};
+const ACCT={name:'',email:'',loaded:false,last:0,busy:false,synced:false};
+const LT0=store.lt||0;
 async function acctInit(){
   try{
     if(CAP.user&&CAP.uid){
       const ps=await CAP.user.profiles([CAP.uid]);const pr=(ps&&ps[CAP.uid])||{};
       ACCT.name=pr.name||'';ACCT.email=pr.email||'';
     }
-    if(CAP.db&&CAP.uid){const s=await CAP.db.doc('data/users/'+CAP.uid+'/save').get();if(s.exists){const d=s.data()||{};ACCT.last=+d.t||0;}}
+    if(CAP.db&&CAP.uid){const s=await CAP.db.doc('data/users/'+CAP.uid+'/save').get();if(s.exists){const d=s.data()||{};ACCT.last=+d.t||0;
+      if(FBX&&FBX.info().email&&(+d.t||0)>LT0+3000){try{const o=JSON.parse(d.d);const ls=x=>(x.level||1)*1000+Object.values(x.stars||{}).reduce((a,b)=>a+(+b||0),0);
+        if(ls(o)>=ls(store)){o.test=false;o.autoCloud=true;o.lt=+d.t;o.syncMsg=1;writeAndReload(o);return;}}catch(e){}}}ACCT.synced=true;}
+    if(store.syncMsg){delete store.syncMsg;_save0();setTimeout(()=>toast('☁️ Hesabındaki en son ilerleme yüklendi',2600),1500);}
   }catch(e){}
   ACCT.loaded=true;try{if($('#s-settings').classList.contains('on'))renderSettings();}catch(e){}
 }
@@ -3861,29 +3894,32 @@ function acctOn(){return !!(CAP.db&&CAP.uid);}
 function snapshot(){const o=JSON.parse(JSON.stringify(store));delete o.test;return JSON.stringify(o);}
 async function cloudPush(manual){
   if(!acctOn()||!navigator.onLine||ACCT.busy)return false;
+  if(!manual&&!ACCT.synced)return false;
   ACCT.busy=true;
-  try{await CAP.db.doc('data/users/'+CAP.uid+'/save').set({t:Date.now(),v:APP_VER,d:snapshot()});ACCT.last=Date.now();if(manual)toast('☁️ İlerlemen hesabına kaydedildi');ACCT.busy=false;return true;}
+  try{await CAP.db.doc('data/users/'+CAP.uid+'/save').set({t:store.lt||Date.now(),v:APP_VER,d:snapshot()});ACCT.last=Date.now();if(manual)toast('☁️ İlerlemen hesabına kaydedildi');ACCT.busy=false;return true;}
   catch(e){ACCT.busy=false;if(manual)toast('Kaydedilemedi, sonra tekrar dene');return false;}
 }
 let cloudT=null;
 function cloudDirty(){if(!store.autoCloud||!acctOn()||!navigator.onLine)return;clearTimeout(cloudT);cloudT=setTimeout(()=>{cloudPush(false).then(()=>{try{if($('#s-settings').classList.contains('on'))renderSettings();}catch(e){}});},15000);}
-const _save0=save;save=function(){_save0();cloudDirty();};
+let saveLock=false;
+const _save0=save;save=function(){if(saveLock)return;store.lt=Date.now();_save0();cloudDirty();};
+function writeAndReload(o){saveLock=true;try{localStorage.setItem('plop-v1',JSON.stringify(o));}catch(e){}location.reload();}
 async function cloudPull(){
   if(!acctOn()||!navigator.onLine){toast('İnternet ya da hesap yok');return;}
   let s;try{s=await CAP.db.doc('data/users/'+CAP.uid+'/save').get();}catch(e){toast('Okunamadı, tekrar dene');return;}
   if(!s||!s.exists){toast('Hesabında kayıt yok');return;}
   const d=s.data()||{};let o;try{o=JSON.parse(d.d);}catch(e){toast('Kayıt bozuk');return;}
   modal('<h2>Kaydı yükle?</h2><p>Hesabındaki kayıt ('+new Date(+d.t||0).toLocaleString('tr-TR')+') bu cihazdaki ilerlemenin <b>yerine</b> geçecek.</p><div class="stack"><button class="btn primary" id="cl-ok">Evet, yükle</button><button class="btn" id="cl-x">Vazgeç</button></div>',
-   {'cl-ok':()=>{o.test=false;try{localStorage.setItem('plop-v1',JSON.stringify(o));}catch(e){}location.reload();},'cl-x':()=>{}});
+   {'cl-ok':()=>{o.test=false;writeAndReload(o);},'cl-x':()=>{}});
 }
 function renderAcct(){
   const box=$('#st-acct');if(!box)return;box.innerHTML='';
   const row=h=>{const d=document.createElement('div');d.className='st-row col';d.innerHTML=h;box.appendChild(d);return d;};
   if(!navigator.onLine){row('<span><b>📴 İnternetsiz mod</b><small>İnternet yok. İlerlemen bu cihazda saklanıyor, bağlantı gelince hesabına kaydedebilirsin.</small></span>');}
   if(!ACCT.loaded&&navigator.onLine&&!CAP.tried){row('<span><b>Hesap kontrol ediliyor…</b></span>');return;}
-  if(!IN_CLAUDE&&!FBX){fbSetup(row);return;}
+  if(!acctOn()&&FBX){row('<span><b>👤 Hesap</b><small>Sunucuya bağlanılamadı. İnternetini kontrol edip tekrar dene.</small></span>');return;}
   if(!acctOn()){row('<span><b>👤 Hesap bağlı değil</b><small>Oyunu claude.ai’de giriş yaparak açarsan ilerlemen hesabına kaydedilir ve başka cihazda devam edebilirsin. Şimdilik kayıtlar bu cihazda.</small></span>');return;}
-  if(FBX)ACCT.email=FBX.info().email||'';
+  if(FBX){fbPanel(box,row);return;}
   const nm=ACCT.name?'<b></b>':'';
   const r=row('<span><b>👤 Hesap</b><small id="ac-nm"></small></span>');
   const sm=r.querySelector('#ac-nm');
@@ -3891,7 +3927,6 @@ function renderAcct(){
   const v=document.createElement('div');v.className='sub';v.style.cssText='margin:4px 0 0;font-size:12px';
   v.textContent=FBX?(FBX.info().email?'':'Hesabın bu cihaza bağlı. E-posta ekleyerek kalıcı yapabilirsin.'):ACCT.email?'✅ E-posta doğrulanmış (Claude hesabınla giriş yapıldı).':'✅ Giriş yapıldı. E-posta bilgisi paylaşılmıyor.';
   r.appendChild(v);
-  if(FBX)fbAcct(r,v,row);
   row('<span><b>☁️ Bulut kaydı</b><small id="ac-last"></small></span>').querySelector('#ac-last').textContent=ACCT.last?'Son kayıt: '+new Date(ACCT.last).toLocaleString('tr-TR'):'Henüz kaydedilmedi.';
   const br=document.createElement('div');br.className='btn-row';br.style.cssText='display:flex;gap:8px;margin:6px 0';
   const b1=document.createElement('button');b1.className='btn primary';b1.textContent='☁️ Şimdi kaydet';b1.disabled=!navigator.onLine;b1.onclick=async()=>{b1.disabled=true;await cloudPush(true);renderAcct();};
@@ -3899,39 +3934,59 @@ function renderAcct(){
   br.appendChild(b1);br.appendChild(b2);box.appendChild(br);
   box.appendChild(stRow('autoCloud','🔄 Otomatik kaydet','Her değişiklikten kısa süre sonra ilerlemeni hesabına kaydeder.',!!store.autoCloud,v=>{store.autoCloud=v;if(v)cloudDirty();}));
 }
-function fbSetup(row){
-  const r=row('<span><b>🌐 Sunucu bağlantısı</b><small>Bu oyun Claude dışında açıldı. Hesap, bulut kaydı ve arkadaşlar için kendi Firebase projenin ayarlarını yapıştır (kurulum: FIREBASE-KURULUM.md). Şimdilik kayıtlar bu cihazda.</small></span>');
-  const ta=document.createElement('textarea');ta.rows=4;ta.placeholder='{"apiKey":"...","projectId":"..."}';ta.style.cssText='width:100%;box-sizing:border-box;margin-top:6px;font-size:12px';
-  const b=document.createElement('button');b.className='btn primary';b.textContent='Bağlan';b.style.marginTop='6px';
-  b.onclick=()=>{let c=null;try{const t=ta.value.trim();const m=t.match(/\{[\s\S]*\}/);c=JSON.parse(m?m[0]:t);}catch(e){}
-    if(!c){const a=ta.value.match(/apiKey\s*["']?\s*[:=]\s*["']([^"']+)/),p=ta.value.match(/projectId\s*["']?\s*[:=]\s*["']([^"']+)/);if(a&&p)c={apiKey:a[1],projectId:p[1]};}
-    if(!c||!c.apiKey||!c.projectId){toast('apiKey ve projectId bulunamadı');return;}
-    try{localStorage.setItem('plop-fb',JSON.stringify({apiKey:c.apiKey,projectId:c.projectId}));}catch(e){}location.reload();};
-  r.appendChild(ta);r.appendChild(b);
-}
-function fbAcct(r,v,row){
+function fbPanel(box,row){
   const em=FBX.info().email;
-  const inp=(t,ph)=>{const i=document.createElement('input');i.type=t;i.placeholder=ph;i.style.cssText='width:100%;box-sizing:border-box;margin:4px 0;padding:8px;font-size:14px';return i;};
-  const btn=(t,f,pri)=>{const b=document.createElement('button');b.className='btn'+(pri?' primary':'');b.textContent=t;b.style.marginRight='6px';b.onclick=async()=>{b.disabled=true;try{await f();}catch(e){toast('⚠️ '+fbErr(e));}b.disabled=false;};return b;};
-  const box=row('<span><b>✉️ E-posta ile giriş</b><small></small></span>');
-  const sm=box.querySelector('small');
-  if(em){
-    sm.textContent=em+' · doğrulama durumu kontrol ediliyor…';
-    FBX.verified().then(ok=>{sm.textContent=em+(ok?' · ✅ doğrulandı':' · ⏳ doğrulanmadı, e-postandaki bağlantıya tıkla');}).catch(()=>{sm.textContent=em;});
-    box.appendChild(btn('Doğrulama e-postası gönder',async()=>{await FBX.sendVerify();toast('📧 Gönderildi, gelen kutunu kontrol et');}));
-    box.appendChild(btn('Kontrol et',async()=>{const ok=await FBX.verified();toast(ok?'✅ E-posta doğrulandı':'Henüz doğrulanmamış');renderAcct();}));
-    box.appendChild(btn('Çıkış yap',async()=>{if(!confirm('Çıkış yapılsın mı? İlerlemen bu cihazda kalır.'))return;FBX.signOut();location.reload();}));
-  }else{
-    sm.textContent='Şu an anonim hesaptasın. E-posta ekleyerek ilerlemeni ve arkadaşlarını başka cihazda da kullan.';
-    const e1=inp('email','E-posta'),p1=inp('password','Şifre (en az 6 karakter)');
-    box.appendChild(e1);box.appendChild(p1);
-    box.appendChild(btn('Hesap oluştur',async()=>{await FBX.attachEmail(e1.value.trim(),p1.value);toast('📧 Doğrulama e-postası gönderildi');renderAcct();},true));
-    box.appendChild(btn('Giriş yap',async()=>{await FBX.signIn(e1.value.trim(),p1.value);location.reload();}));
-    box.appendChild(btn('Şifremi unuttum',async()=>{await FBX.reset(e1.value.trim());toast('📧 Sıfırlama e-postası gönderildi');}));
+  const el=(t,c,h)=>{const e=document.createElement(t);if(c)e.className=c;if(h!=null)e.innerHTML=h;return e;};
+  const inp=(t,ph,ac)=>{const i=el('input','acc-in');i.type=t;i.placeholder=ph;i.autocomplete=ac;i.id='acc-'+t;return i;};
+  const busy=async(b,f)=>{if(b.disabled)return;b.disabled=true;const tx=b.innerHTML;b.innerHTML='…';try{await f();}catch(e){toast(fbErr(e),3200);}b.disabled=false;b.innerHTML=tx;};
+  if(!em){
+    const c=row('<span><b>👤 Hesap</b><small>Gmail (ya da başka bir e-posta) ve şifrenle giriş yap. İlerlemen otomatik olarak hesabına kaydedilir, başka cihazda aynı bilgilerle girince kaldığın yerden devam edersin.</small></span>');
+    const f=el('form','acc-form');f.onsubmit=e=>e.preventDefault();
+    const e1=inp('email','E-posta adresin','email'),p1=inp('password','Şifre (en az 6 karakter)','current-password');
+    const br=el('div','acc-btns');
+    const bR=el('button','btn primary','Kayıt ol'),bL=el('button','btn','Giriş yap');bR.type='button';bL.type='button';
+    const fg=el('button','acc-link','Şifremi unuttum');fg.type='button';
+    const or=el('div','acc-or','<span>veya</span>');
+    const bG=el('button','btn acc-g','<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path fill="#4285F4" d="M22.6 12.2c0-.8-.1-1.5-.2-2.2H12v4.2h5.9a5 5 0 01-2.2 3.3v2.7h3.5c2.1-1.9 3.4-4.8 3.4-8z"/><path fill="#34A853" d="M12 23c3 0 5.4-1 7.2-2.7l-3.5-2.7c-1 .7-2.2 1-3.7 1-2.9 0-5.3-1.9-6.2-4.5H2.2v2.8A11 11 0 0012 23z"/><path fill="#FBBC05" d="M5.8 14.1a6.6 6.6 0 010-4.2V7.1H2.2a11 11 0 000 9.8z"/><path fill="#EA4335" d="M12 5.4c1.6 0 3 .6 4.2 1.6l3.1-3.1A11 11 0 002.2 7.1l3.6 2.8C6.7 7.3 9.1 5.4 12 5.4z"/></svg><span>Google ile devam et</span>');bG.type='button';
+    const chk=reg=>{const em=e1.value.trim(),pw=p1.value;if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em))throw new Error('INVALID_EMAIL');if(pw.length<6)throw new Error('WEAK_PASSWORD');return [em,pw];};
+    bR.onclick=()=>busy(bR,async()=>{const [em,pw]=chk(true);await FBX.attachEmail(em,pw);store.autoCloud=true;save();await cloudPush(false);toast('✅ Hesabın oluşturuldu. Doğrulama e-postası gönderildi.',3200);renderAcct();try{publishProfile();}catch(e){}});
+    bL.onclick=()=>busy(bL,async()=>{const [em,pw]=chk(false);await FBX.signIn(em,pw);await fbAfterLogin();});
+    bG.onclick=()=>busy(bG,async()=>{await FBX.google();await fbAfterLogin();});
+    fg.onclick=()=>busy(fg,async()=>{const em=e1.value.trim();if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em))throw new Error('MISSING_EMAIL');await FBX.reset(em);toast('📧 Şifre sıfırlama e-postası gönderildi',3000);});
+    br.appendChild(bR);br.appendChild(bL);
+    f.appendChild(e1);f.appendChild(p1);f.appendChild(br);f.appendChild(fg);f.appendChild(or);f.appendChild(bG);
+    c.appendChild(f);
+    return;
   }
+  const c=row('<span><b>👤 Hesap</b><small id="ac-em"></small></span>');
+  c.querySelector('#ac-em').textContent=em;
+  const st=el('div','sub acc-st');c.appendChild(st);
+  st.textContent='Doğrulama kontrol ediliyor…';
+  FBX.verified().then(ok=>{
+    if(ok){st.textContent='✅ E-posta doğrulandı';return;}
+    st.textContent='⏳ E-postanı doğrula: gelen kutundaki bağlantıya tıkla.';
+    const bv=el('button','acc-link','Doğrulama e-postasını tekrar gönder');bv.type='button';bv.onclick=()=>busy(bv,async()=>{await FBX.sendVerify();toast('📧 Gönderildi, gelen kutunu (ve spam klasörünü) kontrol et',3200);});c.appendChild(bv);
+  }).catch(()=>{st.textContent='';});
+  const s2=row('<span><b>☁️ Otomatik kayıt açık</b><small id="ac-last"></small></span>');
+  s2.querySelector('#ac-last').textContent='İlerlemen kendiliğinden hesabına kaydediliyor. '+(ACCT.last?'Son kayıt: '+new Date(ACCT.last).toLocaleString('tr-TR'):'');
+  const br=el('div','acc-btns');
+  const b1=el('button','btn','☁️ Şimdi kaydet'),b2=el('button','btn','Çıkış yap');b1.type='button';b2.type='button';b1.disabled=!navigator.onLine;
+  b1.onclick=()=>busy(b1,async()=>{await cloudPush(true);renderAcct();});
+  b2.onclick=()=>modal('<h2>Çıkış yapılsın mı?</h2><p>İlerlemen hesabında kayıtlı kalır. Tekrar giriş yapınca geri gelir.</p><div class="btn-row"><button class="btn" id="lo-x">Vazgeç</button><button class="btn primary" id="lo-ok">Çıkış yap</button></div>',{'lo-x':()=>{},'lo-ok':async()=>{try{await cloudPush(false);}catch(e){}FBX.signOut();location.reload();}});
+  br.appendChild(b1);br.appendChild(b2);s2.appendChild(br);
 }
-function fbErr(e){const m=String(e&&e.message||e);const t={EMAIL_EXISTS:'Bu e-posta zaten kayıtlı, “Giriş yap”ı dene',INVALID_EMAIL:'Geçersiz e-posta',WEAK_PASSWORD:'Şifre en az 6 karakter olmalı',INVALID_LOGIN_CREDENTIALS:'E-posta veya şifre yanlış',EMAIL_NOT_FOUND:'Bu e-posta kayıtlı değil',INVALID_PASSWORD:'Şifre yanlış',MISSING_EMAIL:'E-posta gir',MISSING_PASSWORD:'Şifre gir',TOO_MANY_ATTEMPTS_TRY_LATER:'Çok fazla deneme, biraz bekle'};for(const k in t)if(m.indexOf(k)===0||m.indexOf(k)>=0)return t[k];return m;}
-window.addEventListener('online',()=>{if(FBX&&!CAP.uid&&CAP.user){CAP.user.id().then(u=>{CAP.uid=u;if(typeof frInit==='function')frInit();acctInit();}).catch(()=>{});}});
+async function fbAfterLogin(){
+  let c=null;try{c=await FBX.loadCloud();}catch(e){}
+  const apply=o=>{o.test=false;o.autoCloud=true;o.lt=Date.now();writeAndReload(o);};
+  const keep=()=>{store.autoCloud=true;store.lt=Date.now();save();location.reload();};
+  if(!c||!c.d){keep();return;}
+  let o;try{o=JSON.parse(c.d);}catch(e){keep();return;}
+  const ls=x=>(x.level||1)*1000+Object.values(x.stars||{}).reduce((a,b)=>a+(+b||0),0);
+  if(ls(store)<=ls(o)||(store.level||1)<=1){apply(o);return;}
+  modal('<h2>Hangi ilerleme kalsın?</h2><p>Hesabında <b>bölüm '+(o.level||1)+'</b>, bu cihazda <b>bölüm '+(store.level||1)+'</b> kayıtlı.</p><div class="stack"><button class="btn primary" id="lg-dev">Bu cihazdakini kullan</button><button class="btn" id="lg-acc">Hesaptakini kullan</button></div>',{'lg-dev':keep,'lg-acc':()=>apply(o)});
+}
+function fbErr(e){const m=String(e&&e.message||e);const t={EMAIL_EXISTS:'Bu e-posta zaten kayıtlı, “Giriş yap”ı dene',INVALID_EMAIL:'Geçersiz e-posta',WEAK_PASSWORD:'Şifre en az 6 karakter olmalı',INVALID_LOGIN_CREDENTIALS:'E-posta veya şifre yanlış',EMAIL_NOT_FOUND:'Bu e-posta kayıtlı değil',INVALID_PASSWORD:'Şifre yanlış',MISSING_EMAIL:'E-posta gir',MISSING_PASSWORD:'Şifre gir',TOO_MANY_ATTEMPTS_TRY_LATER:'Çok fazla deneme, biraz bekle','auth/popup-closed-by-user':'Google penceresi kapatıldı','auth/cancelled-popup-request':'Google penceresi kapatıldı','auth/popup-blocked':'Tarayıcı açılır pencereyi engelledi, izin verip tekrar dene','auth/network-request-failed':'İnternet bağlantını kontrol et','auth/unauthorized-domain':'Bu adresten Google ile giriş henüz açık değil','SDK_LOAD':'Google girişi yüklenemedi, internetini kontrol et','Failed to fetch':'İnternet bağlantını kontrol et','CREDENTIAL_TOO_OLD_LOGIN_AGAIN':'Tekrar giriş yapman gerekiyor','USER_DISABLED':'Bu hesap kapatılmış'};for(const k in t)if(m.indexOf(k)===0||m.indexOf(k)>=0)return t[k];return m;}
+window.addEventListener('online',()=>{if(CAP.uid&&!ACCT.synced)acctInit();if(FBX&&!CAP.uid&&CAP.user){CAP.user.id().then(u=>{CAP.uid=u;if(typeof frInit==='function')frInit();acctInit();}).catch(()=>{});}});
 const _rs0=renderSettings;renderSettings=function(){const a=document.activeElement;if(a&&/^(INPUT|TEXTAREA)$/.test(a.tagName)&&a.closest&&a.closest('#st-acct'))return;_rs0();renderAcct();let vv=document.getElementById('st-ver');if(!vv){vv=document.createElement('p');vv.id='st-ver';vv.style.cssText='text-align:center;opacity:.6;font-size:13px;margin:18px 0 8px';document.getElementById('s-settings').appendChild(vv);}vv.textContent='Plop! · sürüm '+APP_VER;};
 netUpdate(true);
 const PC_AL='23456789ABCDEFGHJKMNPQRSTUVWXYZ';
@@ -4207,7 +4262,7 @@ if(hh&&hh[0].toUpperCase()==='P'){const p=decodePuzzle(hh);if(p)playCustom(p);}
 </script>
 <div id="upd-bar" style="display:none;position:fixed;left:12px;right:12px;bottom:14px;z-index:99999;background:#17332a;color:#fff;border-radius:18px;padding:12px 14px;box-shadow:0 8px 24px rgba(0,0,0,.35);font:600 15px system-ui,sans-serif;align-items:center;gap:10px"><span id="upd-t" style="flex:1">Yeni sürüm hazır!</span><button id="upd-later" type="button" style="background:none;border:0;color:#cfe;font:600 14px system-ui;padding:8px">Sonra</button><button id="upd-go" type="button" style="background:#2fbf6c;color:#06361d;border:0;border-radius:12px;font:800 15px system-ui;padding:9px 16px">Güncelle</button></div>
 <script>(function(){
-var CUR='54',SITE='https://demko-sudo.github.io/plop/',web=location.protocol.indexOf('http')===0;
+var CUR='55',SITE='https://demko-sudo.github.io/plop/',web=location.protocol.indexOf('http')===0;
 if(web&&'serviceWorker' in navigator)addEventListener('load',function(){navigator.serviceWorker.register('sw.js').catch(function(){});});
 var bar=document.getElementById('upd-bar'),shown=false;
 function check(){
