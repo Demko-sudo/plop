@@ -3604,7 +3604,7 @@ function shopBuy(it){
     {'sh-wear':()=>{if(it.kind==='n')store.hat=it.id;else if(it.kind==='s')store.stCos=it.id;else if(it.kind==='g')store.glCos=it.id;else{store.gmHat=it.id;gmRefresh();}save();toast('Giydin! 🎉');renderShop();},'sh-ok':()=>{}});
 }
 $('#n-shop').onclick=()=>show('shop');$('#m-shop').onclick=()=>show('shop');
-const APP_VER='49';
+const APP_VER='51';
 function ldBar(p,txt){const b=$('#ld-bar');if(b){b.classList.remove('ind');b.style.width=p+'%';}if(txt)$('#ld-t').textContent=txt;}
 function bootLoad(done){
   const upd=store.ver&&store.ver!==APP_VER;
@@ -3615,7 +3615,7 @@ function bootLoad(done){
   const t0=Date.now();
   (function wait(){
     const ready=CAP.tried||!navigator.onLine||Date.now()-t0>2500;
-    if(Date.now()-t0>=1100&&ready){ldBar(100,'Hazır!');store.ver=APP_VER;save();setTimeout(()=>{done();if(upd)setTimeout(()=>toast('🎉 Oyun güncellendi'),500);},250);}
+    if(Date.now()-t0>=1100&&ready){ldBar(100,'Hazır!');store.ver=APP_VER;save();setTimeout(()=>{done();if(upd)setTimeout(()=>toast('🎉 Oyun güncellendi · sürüm '+APP_VER),500);},250);}
     else setTimeout(wait,120);
   })();
 }
@@ -3717,7 +3717,7 @@ function fbAcct(r,v,row){
 }
 function fbErr(e){const m=String(e&&e.message||e);const t={EMAIL_EXISTS:'Bu e-posta zaten kayıtlı, “Giriş yap”ı dene',INVALID_EMAIL:'Geçersiz e-posta',WEAK_PASSWORD:'Şifre en az 6 karakter olmalı',INVALID_LOGIN_CREDENTIALS:'E-posta veya şifre yanlış',EMAIL_NOT_FOUND:'Bu e-posta kayıtlı değil',INVALID_PASSWORD:'Şifre yanlış',MISSING_EMAIL:'E-posta gir',MISSING_PASSWORD:'Şifre gir',TOO_MANY_ATTEMPTS_TRY_LATER:'Çok fazla deneme, biraz bekle'};for(const k in t)if(m.indexOf(k)===0||m.indexOf(k)>=0)return t[k];return m;}
 window.addEventListener('online',()=>{if(FBX&&!CAP.uid&&CAP.user){CAP.user.id().then(u=>{CAP.uid=u;if(typeof frInit==='function')frInit();acctInit();}).catch(()=>{});}});
-const _rs0=renderSettings;renderSettings=function(){const a=document.activeElement;if(a&&/^(INPUT|TEXTAREA)$/.test(a.tagName)&&a.closest&&a.closest('#st-acct'))return;_rs0();renderAcct();};
+const _rs0=renderSettings;renderSettings=function(){const a=document.activeElement;if(a&&/^(INPUT|TEXTAREA)$/.test(a.tagName)&&a.closest&&a.closest('#st-acct'))return;_rs0();renderAcct();let vv=document.getElementById('st-ver');if(!vv){vv=document.createElement('p');vv.id='st-ver';vv.style.cssText='text-align:center;opacity:.6;font-size:13px;margin:18px 0 8px';document.getElementById('s-settings').appendChild(vv);}vv.textContent='Plop! · sürüm '+APP_VER;};
 netUpdate(true);
 const PC_AL='23456789ABCDEFGHJKMNPQRSTUVWXYZ';
 function genCode(){let s='';const a=new Uint32Array(6);try{crypto.getRandomValues(a);}catch(e){for(let i=0;i<6;i++)a[i]=Math.random()*4294967295;}for(let i=0;i<6;i++)s+=PC_AL[a[i]%PC_AL.length];return s;}
@@ -3936,5 +3936,26 @@ const hh=(location.hash||'').slice(1);
 if(hh&&hh[0].toUpperCase()==='P'){const p=decodePuzzle(hh);if(p)playCustom(p);}
 })();
 </script>
-<script>if('serviceWorker' in navigator&&location.protocol.indexOf('http')===0)addEventListener('load',function(){navigator.serviceWorker.register('sw.js').catch(function(){});});</script></body>
+<div id="upd-bar" style="display:none;position:fixed;left:12px;right:12px;bottom:14px;z-index:99999;background:#17332a;color:#fff;border-radius:18px;padding:12px 14px;box-shadow:0 8px 24px rgba(0,0,0,.35);font:600 15px system-ui,sans-serif;align-items:center;gap:10px"><span id="upd-t" style="flex:1">Yeni sürüm hazır!</span><button id="upd-later" type="button" style="background:none;border:0;color:#cfe;font:600 14px system-ui;padding:8px">Sonra</button><button id="upd-go" type="button" style="background:#2fbf6c;color:#06361d;border:0;border-radius:12px;font:800 15px system-ui;padding:9px 16px">Güncelle</button></div>
+<script>(function(){
+var CUR='51',SITE='https://demko-sudo.github.io/plop/',web=location.protocol.indexOf('http')===0;
+if(web&&'serviceWorker' in navigator)addEventListener('load',function(){navigator.serviceWorker.register('sw.js').catch(function(){});});
+var bar=document.getElementById('upd-bar'),shown=false;
+function check(){
+ if(shown||!navigator.onLine)return;
+ fetch((web?'':SITE)+'version.json?t='+Date.now(),{cache:'no-store'}).then(function(r){return r.json();}).then(function(j){
+  if(!j||!j.v||+j.v<=+CUR)return;
+  shown=true;document.getElementById('upd-t').textContent='Yeni sürüm hazır ('+j.v+')'+(j.notes?': '+j.notes:'');bar.style.display='flex';
+ }).catch(function(){});
+}
+document.getElementById('upd-later').onclick=function(){bar.style.display='none';};
+document.getElementById('upd-go').onclick=function(){
+ var b=this;b.disabled=true;b.textContent='…';
+ if(!web){location.href=SITE+'oyun.html';return;}
+ var go=function(){location.reload();};
+ if(window.caches)Promise.all(['oyun.html','index.html'].map(function(u){return fetch(u,{cache:'reload'});})).then(function(){setTimeout(go,300);},go);else go();
+};
+setTimeout(check,2500);setInterval(check,10*60*1000);
+addEventListener('online',check);document.addEventListener('visibilitychange',function(){if(!document.hidden)check();});
+})();</script></body>
 </html>
