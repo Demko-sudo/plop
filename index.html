@@ -176,7 +176,7 @@ footer{padding:30px 0 50px;color:var(--mute);font-size:14px;border-top:2px dashe
       b.onclick=function(){sel=(sel===i)?-1:i;draw();msg()};
       st.appendChild(b);
     });
-    if(sl.indexOf(GOAL)>-1){hint.textContent='🎉 Hedefe ulaştın! Baştan dene ya da başka yol bul.';}
+    if(sl.indexOf(GOAL)>-1){hint.textContent='Hedefe ulaştın! Baştan dene ya da başka yol bul.';}
   }
   function msg(){if(sl.indexOf(GOAL)>-1)return;hint.textContent=sel<0?'Bir slime\'a dokun.':'Seçili: '+sl[sel]+'. “Böl” ya da başka bir slime seçip “Topla”.';}
   var pick2=-1;
