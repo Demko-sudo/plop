@@ -201,11 +201,13 @@ addEventListener('beforeinstallprompt',function(e){e.preventDefault();dp=e;});
 function go(){var n=document.getElementById('inst-note');
  if(dp){dp.prompt();dp.userChoice.then(function(){dp=null;});return;}
  var ua=navigator.userAgent,m;
- if(/iPhone|iPad|iPod/.test(ua))m='iPhone/iPad: Safari ile aç, Paylaş düğmesine bas, “Ana Ekrana Ekle”yi seç.';
- else if(/OPR|Opera/.test(ua)&&!/Android/.test(ua))m='Opera masaüstü uygulama yüklemeyi desteklemiyor. Chrome ya da Edge ile aç; adres çubuğundaki yükle simgesine bas. Telefondaysan Chrome ile aç.';
- else if(/Android/.test(ua))m='Chrome menüsünü (⋮) aç, “Uygulamayı yükle” ya da “Ana ekrana ekle”yi seç.';
- else m='Chrome ya da Edge ile aç; adres çubuğunun sağındaki yükle simgesine bas ya da menüden “Plop!’u yükle”yi seç.';
- n.textContent=m;n.style.cssText='color:var(--ink);font-weight:700;font-size:16px;background:var(--sun);padding:10px 14px;border-radius:14px';
+ if(/iPhone|iPad|iPod/.test(ua)){m='iPhone/iPad: Paylaş düğmesine bas, “Ana Ekrana Ekle”yi seç. (Chrome, Safari ve diğer iPhone tarayıcılarında çalışır.)';}
+ else{
+  var l=document.createElement('a');l.href='oyun.html';l.download='Plop.html';document.body.appendChild(l);l.click();l.remove();
+  m='Plop.html indirildi. İndirilenler klasöründen açınca oyun her tarayıcıda, internetsiz çalışır. Masaüstüne taşıyıp kısayol gibi kullanabilirsin.';
+  if(/Android/.test(ua))m+=' Ana ekran simgesi için menüden “Ana ekrana ekle”yi de seçebilirsin.';
+ }
+ n.textContent=m;n.style.cssText='color:#17332a;font-weight:700;font-size:16px;background:var(--sun);padding:10px 14px;border-radius:14px';
  try{n.scrollIntoView({block:'center',behavior:'smooth'});}catch(e){}}
 ['install','install2'].forEach(function(i){var b=document.getElementById(i);if(b)b.onclick=go;});
 addEventListener('appinstalled',function(){var n=document.getElementById('inst-note');if(n)n.textContent='Uygulama yüklendi. Ana ekranında Plop! simgesini bul.';});
