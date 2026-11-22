@@ -133,8 +133,9 @@ button{font-family:inherit;color:inherit;cursor:pointer;border:none;background:n
 .slime .eyes{position:absolute;top:20%;left:0;right:0;display:flex;justify-content:center;gap:calc(var(--s)*.2)}
 .slime .eyes i{width:calc(var(--s)*.11);height:calc(var(--s)*.14);background:#1f2a2e;border-radius:50%;position:relative;animation:blink 5s infinite;animation-delay:var(--dl);transition:height .2s}
 .slime .eyes i::after{content:"";position:absolute;width:35%;height:30%;background:#fff;border-radius:50%;top:18%;left:20%}
-.slime .mouth{position:absolute;top:41%;left:50%;width:calc(var(--s)*.14);height:calc(var(--s)*.06);transform:translateX(-50%);border-bottom:3px solid #1f2a2e;border-radius:0 0 50% 50%;transition:.2s}
-.slime.happy .mouth{height:calc(var(--s)*.1);width:calc(var(--s)*.18);background:#1f2a2e;border:none;border-radius:0 0 50% 50% / 0 0 100% 100%}
+.slime .mouth{position:absolute;top:41%;left:50%;width:calc(var(--s)*.2);height:calc(var(--s)*.075);transform:translateX(-50%);border-bottom:max(2.5px,calc(var(--s)*.028)) solid #1f2a2e;border-radius:0 0 50% 50%/0 0 100% 100%;transition:.2s}
+.slime.happy .mouth{height:calc(var(--s)*.11);width:calc(var(--s)*.2);background:#1f2a2e;border:none;border-radius:0 0 50% 50%/0 0 100% 100%;overflow:hidden}
+.slime.happy:not(.k-s):not(.k-b):not(.k-t):not(.k-z) .mouth::after{content:"";position:absolute;left:50%;bottom:-35%;width:60%;height:75%;transform:translateX(-50%);background:#ff7a9a;border-radius:50%}
 .slime.nope .mouth{transform:translateX(-50%) rotate(180deg)}
 .slime .num{position:absolute;left:0;right:0;bottom:8%;text-align:center;font-weight:800;color:#fff;font-size:var(--fs);line-height:1;text-shadow:0 2px 0 rgba(0,0,0,.25)}
 .slime .shadow{width:calc(var(--s)*.8);height:10px;margin-top:-4px;border-radius:50%;background:var(--shadow)}
@@ -5386,7 +5387,7 @@ function shopBuy(it){
     {'sh-wear':()=>{shopWear(it);toast('Giydin! 🎉');},'sh-ok':()=>{}});
 }
 $('#n-shop').onclick=()=>show('shop');$('#m-shop').onclick=()=>show('shop');
-const APP_VER='92';
+const APP_VER='93';
 function ldBar(p,txt){const b=$('#ld-bar');if(b){b.classList.remove('ind');b.style.width=p+'%';}if(txt)$('#ld-t').textContent=txt;}
 function bootLoad(done){
   const upd=store.ver&&store.ver!==APP_VER;
@@ -5801,7 +5802,7 @@ if(hh&&hh[0].toUpperCase()==='P'){const p=decodePuzzle(hh);if(p)playCustom(p);}
 </script>
 <div id="upd-bar" style="display:none;position:fixed;left:12px;right:12px;bottom:14px;z-index:99999;background:#17332a;color:#fff;border-radius:18px;padding:12px 14px;box-shadow:0 8px 24px rgba(0,0,0,.35);font:600 15px system-ui,sans-serif;align-items:center;gap:10px"><span id="upd-t" style="flex:1">Yeni sürüm hazır!</span><button id="upd-later" type="button" style="background:none;border:0;color:#cfe;font:600 14px system-ui;padding:8px">Sonra</button><button id="upd-go" type="button" style="background:#2fbf6c;color:#06361d;border:0;border-radius:12px;font:800 15px system-ui;padding:9px 16px">Güncelle</button></div>
 <script>(function(){
-var CUR='92',SITE='https://demko-sudo.github.io/plop/',web=location.protocol.indexOf('http')===0;
+var CUR='93',SITE='https://demko-sudo.github.io/plop/',web=location.protocol.indexOf('http')===0;
 if(web&&'serviceWorker' in navigator)addEventListener('load',function(){navigator.serviceWorker.register('sw.js').catch(function(){});});
 var bar=document.getElementById('upd-bar'),shown=false;
 function check(){
