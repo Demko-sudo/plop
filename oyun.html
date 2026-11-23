@@ -1721,6 +1721,9 @@ body.rm .cst .tr-tear{animation:none}
 .av .av-sl .slime{position:relative!important;left:auto!important;top:auto!important;transform:none!important;margin:0!important}
 .av .av-sl{display:flex!important;align-items:center;justify-content:center;transform:translateY(6%) scale(var(--avs,.7))!important}
 #n-av .av{--av:44px;--avs:.62}
+
+.cn-old{pointer-events:none;animation:cnOld .4s ease forwards!important}
+@keyframes cnOld{to{opacity:0}}
 </style>
 </head>
 <body data-theme="cayir">
@@ -6023,7 +6026,7 @@ function shopBuy(it){
     {'sh-wear':()=>{shopWear(it);toast('Giydin! 🎉');},'sh-ok':()=>{}});
 }
 $('#n-shop').onclick=()=>show('shop');$('#m-shop').onclick=()=>show('shop');
-const APP_VER='123';
+const APP_VER='124';
 function ldBar(p,txt){const b=$('#ld-bar');if(b){b.classList.remove('ind');b.style.width=p+'%';}if(txt)$('#ld-t').textContent=txt;}
 function bootLoad(done){
   const upd=store.ver&&store.ver!==APP_VER;
@@ -6905,7 +6908,11 @@ function stCine(id,done){
   function next(){
     if(!ready){clearInterval(typ);tx.textContent=full;ready=true;el.classList.add('rdy');return;}
     if(i>=sc.length-1){end();return;}
-    i++;el.classList.add('sw');setTimeout(()=>{el.classList.remove('sw');show();},260);
+    if(el.dataset.busy)return;el.dataset.busy=1;i++;
+    const old=cam.cloneNode(true);old.style.transform=getComputedStyle(cam).transform;old.style.animation='none';
+    const ins=cam.querySelectorAll('.cn-in'),oins=old.querySelectorAll('.cn-in');ins.forEach((x,k)=>{const o=oins[k];if(o){o.style.transform=getComputedStyle(x).transform;o.style.opacity=getComputedStyle(x).opacity;o.style.animation='none';}});
+    old.classList.add('cn-old');cam.after(old);show();
+    setTimeout(()=>{old.remove();delete el.dataset.busy;},420);
   }
   el.addEventListener('click',e=>{if(e.target.closest('.cn-skip')){sfx('sel');end();return;}next();});
   show();
@@ -11345,7 +11352,7 @@ if(hh&&hh[0].toUpperCase()==='P'){const p=decodePuzzle(hh);if(p)playCustom(p);}
 </script>
 <div id="upd-bar" style="display:none;position:fixed;left:12px;right:12px;bottom:14px;z-index:99999;background:#17332a;color:#fff;border-radius:18px;padding:12px 14px;box-shadow:0 8px 24px rgba(0,0,0,.35);font:600 15px system-ui,sans-serif;align-items:center;gap:10px"><span id="upd-t" style="flex:1">Yeni sürüm hazır!</span><button id="upd-later" type="button" style="background:none;border:0;color:#cfe;font:600 14px system-ui;padding:8px">Sonra</button><button id="upd-go" type="button" style="background:#2fbf6c;color:#06361d;border:0;border-radius:12px;font:800 15px system-ui;padding:9px 16px">Güncelle</button></div>
 <script>(function(){
-var CUR='123',SITE='https://demko-sudo.github.io/plop/',web=location.protocol.indexOf('http')===0;
+var CUR='124',SITE='https://demko-sudo.github.io/plop/',web=location.protocol.indexOf('http')===0;
 if(web&&'serviceWorker' in navigator)addEventListener('load',function(){navigator.serviceWorker.register('sw.js').catch(function(){});});
 var bar=document.getElementById('upd-bar'),shown=false;
 function check(){
