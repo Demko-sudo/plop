@@ -1703,6 +1703,24 @@ body.rm .cst .tr-tear{animation:none}
 #s-look .lktabs button span{font-size:11.5px}
 #s-look .lktabs button.on{transform:translateY(2px);box-shadow:0 1px 0 var(--line)}
 .minimal .av::after{display:none}.minimal .pcard::before{opacity:.35}
+
+/* v122: kısa ekranlarda yan sekmeler akışa girer (kaydırınca birlikte kayar, üst üste binmez) */
+.n-side{display:contents}
+@media (max-width:759px){
+  .n-side{display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:8px;margin:0 0 10px}
+  .n-side .bk-tab,.n-side .st-tab,.n-side .sh-tab,.n-side #n-book{position:relative;top:auto!important;right:auto;left:auto;border-radius:16px;height:44px;padding:8px 14px!important;gap:6px!important;flex:1 1 0;min-width:0;justify-content:center}
+  .n-side .bk-tab small{display:inline!important}.n-side .st-tt{display:flex!important}
+  .n-side .bk-tab::before{display:none}
+  .n-side .bk-tab:hover{padding-right:14px}
+  .n-side .pi-buddy.pi-side{position:relative;top:auto;right:auto;left:auto;flex:none;width:48px;height:50px}
+  .n-side .pi-buddy.pi-side.pi-leg{width:60px;height:52px;right:auto}
+  .n-side .pi-buddy.pi-side .pi-say{right:0;left:auto;top:auto;bottom:calc(100% + 4px)}
+  .n-mid{padding:8px 0}
+}
+/* profil fotoğrafındaki slime: eski .pav/.pf-av kurallarını ez */
+.av .av-sl .slime{position:relative!important;left:auto!important;top:auto!important;transform:none!important;margin:0!important}
+.av .av-sl{display:flex!important;align-items:center;justify-content:center;transform:translateY(6%) scale(var(--avs,.7))!important}
+#n-av .av{--av:44px;--avs:.62}
 </style>
 </head>
 <body data-theme="cayir">
@@ -1722,9 +1740,6 @@ body.rm .cst .tr-tear{animation:none}
     </div>
   </div>
   <button id="n-testb" class="t-badge" hidden aria-label="Test paneli">🧪 TEST</button>
-  <button id="n-shop" class="bk-tab sh-tab" aria-label="Kostüm Dükkanı"><span class="bk-ic">🛍️</span><small>Dükkan</small></button>
-  <button id="n-story" class="bk-tab st-tab" aria-label="Hikâye modu"><span class="bk-ic st-gem"><svg viewBox="0 0 32 32" width="26" height="26" aria-hidden="true"><path d="M3 7L11 4L21 7L29 4V25L21 28L11 25L3 28Z" fill="#f2d79a" stroke="#6a4a22" stroke-width="2" stroke-linejoin="round"/><path d="M11 4V25M21 7V28" stroke="#6a4a22" stroke-width="1.4"/><path d="M13 20Q16 11 20 16T25 12" stroke="#c0392b" stroke-width="1.8" fill="none" stroke-dasharray="1.5 2.4" stroke-linecap="round"/><path d="M22 10l4 4M26 10l-4 4" stroke="#c0392b" stroke-width="2" stroke-linecap="round"/></svg></span><span class="st-tt"><b>Hikâye</b><em id="n-story-s"></em></span></button>
-  <button id="n-book" class="bk-tab" aria-label="Slime Rehberi"><span class="bk-ic">📖</span><small>Rehber</small></button>
   <div class="n-mid">
     <div class="gm-lobby"><button class="gm-a gm-big" id="gm-a1" aria-label="Gummy ile konuş"></button><button class="gm-b gm-bl" id="gm-b1" aria-label="Gummy’nin sözü">…</button></div>
     <button class="btn primary playcard" id="n-play"><span>▶ Oyna</span><small id="n-level"></small></button>
@@ -1732,6 +1747,11 @@ body.rm .cst .tr-tear{animation:none}
       <button class="btn" id="n-online">🌍 Online <small id="n-online-s"></small></button>
       <button class="btn" id="n-modes">🎮 Modlar</button>
     </div>
+  </div>
+  <div class="n-side" id="n-side">
+  <button id="n-shop" class="bk-tab sh-tab" aria-label="Kostüm Dükkanı"><span class="bk-ic">🛍️</span><small>Dükkan</small></button>
+  <button id="n-story" class="bk-tab st-tab" aria-label="Hikâye modu"><span class="bk-ic st-gem"><svg viewBox="0 0 32 32" width="26" height="26" aria-hidden="true"><path d="M3 7L11 4L21 7L29 4V25L21 28L11 25L3 28Z" fill="#f2d79a" stroke="#6a4a22" stroke-width="2" stroke-linejoin="round"/><path d="M11 4V25M21 7V28" stroke="#6a4a22" stroke-width="1.4"/><path d="M13 20Q16 11 20 16T25 12" stroke="#c0392b" stroke-width="1.8" fill="none" stroke-dasharray="1.5 2.4" stroke-linecap="round"/><path d="M22 10l4 4M26 10l-4 4" stroke="#c0392b" stroke-width="2" stroke-linecap="round"/></svg></span><span class="st-tt"><b>Hikâye</b><em id="n-story-s"></em></span></button>
+  <button id="n-book" class="bk-tab" aria-label="Slime Rehberi"><span class="bk-ic">📖</span><small>Rehber</small></button>
   </div>
   <div class="n-bot">
     <button class="tile" id="n-look"><span class="ic">🎨</span>Görünüm</button>
@@ -6003,7 +6023,7 @@ function shopBuy(it){
     {'sh-wear':()=>{shopWear(it);toast('Giydin! 🎉');},'sh-ok':()=>{}});
 }
 $('#n-shop').onclick=()=>show('shop');$('#m-shop').onclick=()=>show('shop');
-const APP_VER='121';
+const APP_VER='123';
 function ldBar(p,txt){const b=$('#ld-bar');if(b){b.classList.remove('ind');b.style.width=p+'%';}if(txt)$('#ld-t').textContent=txt;}
 function bootLoad(done){
   const upd=store.ver&&store.ver!==APP_VER;
@@ -6905,7 +6925,7 @@ function piMount(){
   if(!store.stSaved){if(old)old.remove();return;}
   const lob=document.getElementById('s-menu2');if(!lob)return;
   let b=old;
-  if(!b){b=document.createElement('button');b.id='pi-buddy';b.className='pi-buddy';b.setAttribute('aria-label','Pırıl');b.classList.add('pi-side');lob.insertBefore(b,document.getElementById('n-shop'));b.onclick=piTap;}
+  if(!b){b=document.createElement('button');b.id='pi-buddy';b.className='pi-buddy';b.setAttribute('aria-label','Pırıl');b.classList.add('pi-side');{const ns=document.getElementById('n-shop');(ns&&ns.parentNode||lob).insertBefore(b,ns&&ns.parentNode?ns:null);};b.onclick=piTap;}
   b.innerHTML=piSVG(piCan()?'cheer':'happy',store.piSkin)+'<i class="pi-dot">🎁</i><span class="pi-say" hidden></span>';
   b.classList.toggle('gift',piCan());b.classList.toggle('pi-leg',!!(PI_SK[store.piSkin||'']||{}).cls);
 }
@@ -11325,7 +11345,7 @@ if(hh&&hh[0].toUpperCase()==='P'){const p=decodePuzzle(hh);if(p)playCustom(p);}
 </script>
 <div id="upd-bar" style="display:none;position:fixed;left:12px;right:12px;bottom:14px;z-index:99999;background:#17332a;color:#fff;border-radius:18px;padding:12px 14px;box-shadow:0 8px 24px rgba(0,0,0,.35);font:600 15px system-ui,sans-serif;align-items:center;gap:10px"><span id="upd-t" style="flex:1">Yeni sürüm hazır!</span><button id="upd-later" type="button" style="background:none;border:0;color:#cfe;font:600 14px system-ui;padding:8px">Sonra</button><button id="upd-go" type="button" style="background:#2fbf6c;color:#06361d;border:0;border-radius:12px;font:800 15px system-ui;padding:9px 16px">Güncelle</button></div>
 <script>(function(){
-var CUR='121',SITE='https://demko-sudo.github.io/plop/',web=location.protocol.indexOf('http')===0;
+var CUR='123',SITE='https://demko-sudo.github.io/plop/',web=location.protocol.indexOf('http')===0;
 if(web&&'serviceWorker' in navigator)addEventListener('load',function(){navigator.serviceWorker.register('sw.js').catch(function(){});});
 var bar=document.getElementById('upd-bar'),shown=false;
 function check(){
@@ -11339,8 +11359,10 @@ document.getElementById('upd-later').onclick=function(){bar.style.display='none'
 document.getElementById('upd-go').onclick=function(){
  var b=this;b.disabled=true;b.textContent='…';
  if(!web){location.href=SITE+'oyun.html';return;}
- var go=function(){location.reload();};
- if(window.caches)Promise.all(['oyun.html','index.html'].map(function(u){return fetch(u,{cache:'reload'});})).then(function(){setTimeout(go,300);},go);else go();
+ var go=function(){location.replace('oyun.html?u='+Date.now());};
+ var p1=(navigator.serviceWorker&&navigator.serviceWorker.getRegistrations)?navigator.serviceWorker.getRegistrations().then(function(rs){return Promise.all(rs.map(function(r){return r.unregister();}));}):Promise.resolve();
+ var p2=window.caches?caches.keys().then(function(k){return Promise.all(k.map(function(x){return caches.delete(x);}));}):Promise.resolve();
+ Promise.all([p1,p2]).then(function(){setTimeout(go,200);},go);setTimeout(go,4000);
 };
 setTimeout(check,2500);setInterval(check,10*60*1000);
 addEventListener('online',check);document.addEventListener('visibilitychange',function(){if(!document.hidden)check();});
