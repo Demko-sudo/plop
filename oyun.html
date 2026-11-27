@@ -2390,7 +2390,7 @@ body.rm .av.ri-ates,body.rm .av.ri-gokkusagi,body.rm .av.bg-an,body.rm .av.bg-an
 body.rm .on-radar i,body.rm .on-big,body.rm .vsx-p,body.rm .vsx-v,body.rm .vsx-n{animation:none!important}
 .on-emo{top:46%;bottom:auto;transform:translateY(-50%);right:6px;gap:5px}.on-emo button{width:38px;height:38px;font-size:19px;opacity:.9}
 .btn.danger{color:#d83a3a;border:2px solid #f4b4b4}#s-settings #st-testp:has(#l-test:empty){display:none}
-.cd-btn{margin-left:auto;margin-right:6px;cursor:pointer;border:none;font:inherit;font-weight:800;background:linear-gradient(135deg,#ffe27a,#ffb02a);color:#5a3a00;box-shadow:0 2px 0 #c8800a}
+#s-shop .top .cd-btn{display:inline-flex;align-items:center;gap:4px;padding:6px 12px;border-radius:999px;font-size:14px}.cd-btn{margin-left:auto;margin-right:6px;cursor:pointer;border:none;font:inherit;font-weight:800;background:linear-gradient(135deg,#ffe27a,#ffb02a);color:#5a3a00;box-shadow:0 2px 0 #c8800a}
 </style>
 </head>
 <body data-theme="cayir">
@@ -10988,7 +10988,7 @@ function shopBuy(it){
     {'sh-wear':()=>{shopWear(it);toast('Giydin! 🎉');},'sh-ok':()=>{}});
 }
 $('#n-shop').onclick=()=>show('shop');$('#m-shop').onclick=()=>show('shop');
-const APP_VER='296';
+const APP_VER='297';
 function ldBar(p,txt){const b=$('#ld-bar');if(b){b.classList.remove('ind');b.style.width=p+'%';}if(txt)$('#ld-t').textContent=txt;}
 function bootLoad(done){
   const upd=store.ver&&store.ver!==APP_VER;
@@ -17146,7 +17146,7 @@ function testGate(){if(!TEST_OK)return;
 </script>
 <div id="upd-bar" style="display:none;position:fixed;left:12px;right:12px;bottom:14px;z-index:99999;background:#17332a;color:#fff;border-radius:18px;padding:12px 14px;box-shadow:0 8px 24px rgba(0,0,0,.35);font:600 15px system-ui,sans-serif;align-items:center;gap:10px"><span id="upd-t" style="flex:1">Yeni sürüm hazır!</span><button id="upd-later" type="button" style="background:none;border:0;color:#cfe;font:600 14px system-ui;padding:8px">Sonra</button><button id="upd-go" type="button" style="background:#2fbf6c;color:#06361d;border:0;border-radius:12px;font:800 15px system-ui;padding:9px 16px">Güncelle</button></div>
 <script>(function(){
-var CUR='296',SITE='https://demko-sudo.github.io/plop/',web=location.protocol.indexOf('http')===0;
+var CUR='297',SITE='https://demko-sudo.github.io/plop/',web=location.protocol.indexOf('http')===0;
 if(web&&'serviceWorker' in navigator)addEventListener('load',function(){navigator.serviceWorker.register('sw.js').catch(function(){});});
 var bar=document.getElementById('upd-bar'),shown=false;
 function check(){
