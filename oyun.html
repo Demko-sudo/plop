@@ -2390,6 +2390,7 @@ body.rm .av.ri-ates,body.rm .av.ri-gokkusagi,body.rm .av.bg-an,body.rm .av.bg-an
 body.rm .on-radar i,body.rm .on-big,body.rm .vsx-p,body.rm .vsx-v,body.rm .vsx-n{animation:none!important}
 .on-emo{top:46%;bottom:auto;transform:translateY(-50%);right:6px;gap:5px}.on-emo button{width:38px;height:38px;font-size:19px;opacity:.9}
 .btn.danger{color:#d83a3a;border:2px solid #f4b4b4}#s-settings #st-testp:has(#l-test:empty){display:none}
+.cd-btn{margin-left:auto;margin-right:6px;cursor:pointer;border:none;font:inherit;font-weight:800;background:linear-gradient(135deg,#ffe27a,#ffb02a);color:#5a3a00;box-shadow:0 2px 0 #c8800a}
 </style>
 </head>
 <body data-theme="cayir">
@@ -7617,6 +7618,39 @@ function spRoll(){const pool=spPool();if(!pool.length||balance()<SP_PRICE){sfx('
   return _rs.apply(this,arguments);};
  const _s=show;show=function(id){if(id!=='shop'){if(KS.visit)store.jlV=Date.now();KS.visit=0;}return _s.apply(this,arguments);};
 })();
+(function(){
+ const H=s=>{let x=0x811c9dc5;s='plop:'+String(s).trim().toUpperCase();for(const c of s){x^=c.charCodeAt(0);x=Math.imul(x,0x01000193)>>>0;}return x.toString(36);};
+ const CODES={
+  '13g35ea':{st:100},
+  '1cf3amo':{st:250},
+  '1imqw24':{st:500},
+  'o8rvil':{c:['n','gezegen']},
+  'i0h9td':{c:['n','doodle']},
+  '1ni2794':{c:['n','devejder']},
+  '1b8x4sd':{c:['n','gezegen'],v:['gezegen','Süper Nova']},
+  '1ncmt2m':{c:['n','atli'],v:['atli','Hayalet atlı']}};
+ const T=(tr,en)=>store.lang==='en'?en:tr;
+ function nameOf(k,id){try{const h=(k==='n'?HATS:[]).find(x=>x.e===id);return h?h.n:id;}catch(e){return id;}}
+ function redeem(raw){
+  const code=String(raw||'').trim().toUpperCase();if(!code)return [0,T('Bir kod yaz.','Type a code.')];
+  const key=H(code),R=CODES[key];if(!R)return [0,T('Bu kod geçersiz.','This code is not valid.')];
+  store.codes=store.codes||{};if(store.codes[key])return [0,T('Bu kodu zaten kullandın.','You already used this code.')];
+  store.own=store.own||{};const got=[];
+  if(R.st){store.gift=(store.gift||0)+R.st;got.push('⭐ '+R.st);}
+  if(R.c){const k=R.c[0],id=R.c[1];if(!store.own[k+':'+id]){store.own[k+':'+id]=1;got.push('👗 '+nameOf(k,id));}else{store.gift=(store.gift||0)+50;got.push(T('👗 zaten sendeydi → ⭐ 50','👗 already owned → ⭐ 50'));}}
+  if(R.v){const id=R.v[0],n=R.v[1];try{COSV[id].forEach(g=>g[1].forEach(v=>{if(v[0]===n&&v[4]&&v[4].vid){store.own['vr:'+v[4].vid]=1;got.push('✨ '+n);}}));}catch(e){}}
+  store.codes[key]=Date.now();save();try{if(typeof renderShop==='function')renderShop();}catch(e){}
+  return [1,got.join(' · ')];}
+ window.plopRedeem=redeem;
+ function ui(){
+  modal('<h2>🎟️ '+T('Hediye kodu','Gift code')+'</h2><p class="sub">'+T('Kodunu yaz, ödülün hemen hesabına eklensin. Her kod bir kez kullanılır.','Type your code to get its reward. Each code works once.')+'</p><input id="cd-in" class="rm-in" maxlength="20" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="PLOP100" style="letter-spacing:2px;text-transform:uppercase"><p class="sub" id="cd-msg"></p><div class="stack"><button class="btn primary" id="cd-go">🎁 '+T('Kullan','Redeem')+'</button><button class="btn" id="cd-x">'+T('Kapat','Close')+'</button></div>');
+  const go=()=>{const r=redeem(($('#cd-in')||{}).value);const m=$('#cd-msg');if(m){m.textContent=(r[0]?'🎉 ':'⚠️ ')+r[1];m.style.color=r[0]?'#2a9a4a':'#d8403a';}if(r[0]){try{sfx('win');}catch(e){}try{toast('🎁 '+r[1]);}catch(e){}const b=$('#sh-bal');if(b)b.textContent='⭐ '+balance();}else{try{sfx('bad');}catch(e){}}};
+  const b=$('#cd-go');if(b)b.onclick=go;const x=$('#cd-x');if(x)x.onclick=()=>closeModal();const i=$('#cd-in');if(i){i.focus();i.onkeydown=e=>{if(e.key==='Enter')go();};}}
+ window.plopCodeUI=ui;
+ function addBtn(){const top=document.querySelector('#s-shop .top');if(!top||top.querySelector('.cd-btn'))return;const b=document.createElement('button');b.className='chip cd-btn';b.type='button';b.textContent='🎟️ '+T('Kod','Code');b.onclick=ui;const bal=top.querySelector('#sh-bal');top.insertBefore(b,bal||null);}
+ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',addBtn);else addBtn();
+ const _r=typeof renderShop==='function'?renderShop:null;if(_r){renderShop=function(){const x=_r.apply(this,arguments);try{addBtn();const b=document.querySelector('#s-shop .cd-btn');if(b)b.textContent='🎟️ '+T('Kod','Code');}catch(e){}return x;};}
+})();
 const LEGFX={
  lav:{c:['#ff7a1a','#ffd23c','#ff4a1a'],sh:'ember',aura:'#ff7a1a'},
  galaksi:{c:['#ffffff','#ff9ad8','#8ad0ff','#fff2b0'],sh:'star',aura:'#9a6aff'},
@@ -10954,7 +10988,7 @@ function shopBuy(it){
     {'sh-wear':()=>{shopWear(it);toast('Giydin! 🎉');},'sh-ok':()=>{}});
 }
 $('#n-shop').onclick=()=>show('shop');$('#m-shop').onclick=()=>show('shop');
-const APP_VER='295';
+const APP_VER='296';
 function ldBar(p,txt){const b=$('#ld-bar');if(b){b.classList.remove('ind');b.style.width=p+'%';}if(txt)$('#ld-t').textContent=txt;}
 function bootLoad(done){
   const upd=store.ver&&store.ver!==APP_VER;
@@ -16744,6 +16778,7 @@ I18N.dicts.en={
 "Canlı Çizim": "Living Drawing",
 "YZ Çekirdeği": "AI Core",
 "Yaşayan Albüm": "Living Album",
+"Hediye kodu": "Gift code",
 "Akşam serisi sabah serisi, hepsi serilerin gücü.": "Evening streak, morning streak, it's all the power of streaks.",
 "Altın pullarım bugün çok parlak.": "My gold scales are very shiny today.",
 "Altın slime ile işlem yapınca sonuç ikiye katlanır.": "When you operate with a gold slime the result doubles.",
@@ -17111,7 +17146,7 @@ function testGate(){if(!TEST_OK)return;
 </script>
 <div id="upd-bar" style="display:none;position:fixed;left:12px;right:12px;bottom:14px;z-index:99999;background:#17332a;color:#fff;border-radius:18px;padding:12px 14px;box-shadow:0 8px 24px rgba(0,0,0,.35);font:600 15px system-ui,sans-serif;align-items:center;gap:10px"><span id="upd-t" style="flex:1">Yeni sürüm hazır!</span><button id="upd-later" type="button" style="background:none;border:0;color:#cfe;font:600 14px system-ui;padding:8px">Sonra</button><button id="upd-go" type="button" style="background:#2fbf6c;color:#06361d;border:0;border-radius:12px;font:800 15px system-ui;padding:9px 16px">Güncelle</button></div>
 <script>(function(){
-var CUR='295',SITE='https://demko-sudo.github.io/plop/',web=location.protocol.indexOf('http')===0;
+var CUR='296',SITE='https://demko-sudo.github.io/plop/',web=location.protocol.indexOf('http')===0;
 if(web&&'serviceWorker' in navigator)addEventListener('load',function(){navigator.serviceWorker.register('sw.js').catch(function(){});});
 var bar=document.getElementById('upd-bar'),shown=false;
 function check(){
